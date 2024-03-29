@@ -78,7 +78,7 @@ export function useWebContainer(): [
         };
       }
     },
-    [],
+    [stateContainer],
   );
 
   useEffect(() => {
