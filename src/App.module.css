@@ -1,0 +1,23 @@
+/*!
+ * "JetBrains Mono" is licenced under the SIL Open Font License 1.1
+ * by https://github.com/JetBrains/JetBrainsMono
+ */
+
+@font-face {
+    font-family: "JetBrains Mono NL";
+    src: url("/JetBrainsMonoNL-Regular.ttf") format("truetype");
+}
+
+.Editor {
+    font-family: "JetBrains Mono NL";
+    height: 100vh;
+    resize: none;
+}
+
+.NavbarIcon {
+    font-size: 2rem;
+}
+
+.CursorPointer {
+    cursor: pointer;
+}
