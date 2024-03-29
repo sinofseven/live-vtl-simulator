@@ -1,13 +1,13 @@
+import classNames from "classnames";
+
 type Props = {
   isLoading: boolean;
+  className?: string;
 };
 
-export function LoadingModal({ isLoading }: Props) {
-  if (!isLoading) {
-    return;
-  }
+export function LoadingModal({ isLoading, className }: Props) {
   return (
-    <div className="modal">
+    <div className={classNames("modal", { "is-active": isLoading }, className)}>
       <div className="modal-background"></div>
       <div className="modal-content">
         <progress className="progress is-large is-info" />

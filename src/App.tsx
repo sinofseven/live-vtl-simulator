@@ -20,24 +20,12 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(detectPrefersDarkMode());
   const [isError, setIsError] = useState(false);
   const [isData, setIsData] = useState(false);
+  const [isRendering, setIsRendering] = useState(false);
   const [textData, setTextData] = useState(DEFAULT_TEXT_DATA);
   const [textTemplate, setTextTemplate] = useState(DEFAULT_TEXT_TEMPLATE);
   const [textOutput, setTextOutput] = useState("");
+  const [textTab, setTextTab] = useState("Result");
   const [isLoading, renderByVelocity] = useWebContainer();
-
-  const t01 = useCallback(async () => {
-    console.log("call t01");
-    return 1;
-  }, []);
-
-  const t02 = useCallback(async () => {
-    console.log("call t02");
-    await t01();
-  }, [t01]);
-
-  useEffect(() => {
-    t02();
-  }, [t02]);
 
   applyDarkMode(isDarkMode);
 
@@ -58,29 +46,39 @@ function App() {
     }
   }
 
-  async function updateResult() {
+  const updateResult = useCallback(async () => {
     try {
-      JSON.parse(textData);
-    } catch (e) {
-      setIsError(true);
-      setTextOutput((e as Error).stack!);
-      return;
-    }
+      setIsRendering(true);
+      setTextTab("Rendering, Rendering, Rendering");
+      try {
+        JSON.parse(textData);
+      } catch (e) {
+        setIsError(true);
+        setTextOutput((e as Error).stack!);
+        setTextTab("failed to parse data");
+        return;
+      }
 
-    try {
-      const result = await renderByVelocity(textTemplate, textData);
-      setIsError(result.isError);
-      setTextOutput(result.text);
-    } catch (e) {
-      setIsError(true);
-      setTextOutput((e as Error).stack!);
-      return;
+      try {
+        const result = await renderByVelocity(textTemplate, textData);
+        console.log({ msg: "render result", result });
+        setIsError(result.isError);
+        setTextOutput(result.text);
+        setTextTab("Result");
+      } catch (e) {
+        setIsError(true);
+        setTextOutput((e as Error).stack!);
+        setTextTab("failed to render");
+        return;
+      }
+    } finally {
+      setIsRendering(false);
     }
-  }
+  }, [textData, textTemplate, renderByVelocity]);
 
   useEffect(() => {
     updateResult();
-  }, [isError, textOutput, textData, textTemplate]);
+  }, [isError, textOutput, textData, textTemplate, updateResult]);
 
   return (
     <>
@@ -141,13 +139,14 @@ function App() {
             <div className="tabs">
               <ul>
                 <li className="is-active">
-                  <a>Result</a>
+                  <a>{textTab}</a>
                 </li>
               </ul>
             </div>
             <textarea
               className={classNames("textarea", Styles.Editor, {
                 "is-danger": isError,
+                "is-warning": isRendering,
               })}
               value={textOutput}
               readOnly
