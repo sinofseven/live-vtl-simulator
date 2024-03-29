@@ -3,10 +3,18 @@ import { faSun } from "@fortawesome/free-regular-svg-icons";
 import { faMoon } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import classNames from "classnames";
-import { ChangeEvent, KeyboardEvent, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  KeyboardEvent,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import Styles from "@/App.module.css";
+import { LoadingModal } from "@/components/loading_modal.tsx";
 import { DEFAULT_TEXT_DATA, DEFAULT_TEXT_TEMPLATE } from "@/default_values";
+import { useWebContainer } from "@/hooks/web_container.ts";
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(detectPrefersDarkMode());
@@ -15,6 +23,21 @@ function App() {
   const [textData, setTextData] = useState(DEFAULT_TEXT_DATA);
   const [textTemplate, setTextTemplate] = useState(DEFAULT_TEXT_TEMPLATE);
   const [textOutput, setTextOutput] = useState("");
+  const [isLoading, renderByVelocity] = useWebContainer();
+
+  const t01 = useCallback(async () => {
+    console.log("call t01");
+    return 1;
+  }, []);
+
+  const t02 = useCallback(async () => {
+    console.log("call t02");
+    await t01();
+  }, [t01]);
+
+  useEffect(() => {
+    t02();
+  }, [t02]);
 
   applyDarkMode(isDarkMode);
 
@@ -35,30 +58,24 @@ function App() {
     }
   }
 
-  function parseData() {
-    try {
-      const data = JSON.parse(textData);
-      return {
-        data,
-        error_message: null,
-      };
-    } catch (e) {
-      return {
-        data: null,
-        error_message: (e as Error).stack!,
-      };
-    }
-  }
-
   async function updateResult() {
-    const data = parseData();
-    if (data.error_message != null) {
+    try {
+      JSON.parse(textData);
+    } catch (e) {
       setIsError(true);
-      setTextOutput(data.error_message);
+      setTextOutput((e as Error).stack!);
       return;
     }
-    setIsError(false);
-    setTextOutput("");
+
+    try {
+      const result = await renderByVelocity(textTemplate, textData);
+      setIsError(result.isError);
+      setTextOutput(result.text);
+    } catch (e) {
+      setIsError(true);
+      setTextOutput((e as Error).stack!);
+      return;
+    }
   }
 
   useEffect(() => {
@@ -67,6 +84,7 @@ function App() {
 
   return (
     <>
+      <LoadingModal isLoading={isLoading} />
       <nav className="navbar is-info">
         <div className="navbar-brand">
           <h2 className="navbar-item title">Live VTL Simulator</h2>
@@ -132,6 +150,7 @@ function App() {
                 "is-danger": isError,
               })}
               value={textOutput}
+              readOnly
             />
           </div>
         </div>

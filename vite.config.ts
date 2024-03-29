@@ -7,5 +7,9 @@ export default defineConfig({
   plugins: [react(), ViteTsconfigPaths()],
   server: {
     port: 9999,
+    headers: {
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin",
+    },
   },
 });
